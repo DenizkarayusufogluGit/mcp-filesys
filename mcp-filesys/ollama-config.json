@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "filesys": {
+      "command": "node",
+      "args": ["/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production",
+        "DEBUG": "mcp:*"
+      }
+    }
+  }
+} 
