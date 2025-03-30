@@ -1,64 +1,152 @@
-# Model Context Protocol (MCP) Server
+# MCP Filesystem Server
 
-This is a template implementation of a Model Context Protocol server that manages context and conversations for AI applications.
+A Model Context Protocol (MCP) server implementation that provides filesystem access capabilities for AI models and applications.
+
+## Overview
+
+The MCP Filesystem Server enables AI models to securely list directory contents and interact with the filesystem through standardized JSON-RPC requests. It implements the Model Context Protocol (MCP) specification for interoperable AI tools.
 
 ## Features
 
-- Context management
-- Conversation tracking
-- Message history
-- RESTful API endpoints
+- **Filesystem Access**: List directory contents on the host system
+- **JSON-RPC Interface**: Compliant with the MCP specification
+- **Secure Access Controls**: Resource access is limited to specific capabilities
+- **Standard I/O Transport**: Communicates using stdio for easy integration
 
-## Setup
+## Installation
 
-1. Create a virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Clone the repository
+git clone https://github.com/yourusername/mcp-filesys.git
+cd mcp-filesys
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
+## Usage with Cursor or Ollama
+
+### Configuration
+
+1. Create a configuration file for your AI tool:
+
+**For Ollama** (ollama-config.json):
+```json
+{
+  "mcpServers": {
+    "filesys": {
+      "command": "node",
+      "args": ["/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production",
+        "DEBUG": "mcp:*"
+      }
+    }
+  }
+}
 ```
 
-3. Run the server:
-```bash
-python mcp_server.py
+**For Cursor** (cursor-mcp-config.json):
+```json
+{
+  "mcpServers": {
+    "filesys": {
+      "command": "node",
+      "args": ["/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production",
+        "DEBUG": "mcp:*"
+      }
+    }
+  }
+}
 ```
 
-The server will start on `http://localhost:8000`
+2. Set the environment variable to point to your configuration file:
 
-## API Endpoints
+```bash
+# For Ollama
+export OLLAMA_MCP_CONFIG=/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/ollama-config.json
 
-### Context Management
-- `POST /context/` - Create a new context
-- `GET /context/{context_id}` - Retrieve a context
+# For Cursor
+export CURSOR_MCP_CONFIG=/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/cursor-mcp-config.json
+```
 
-### Conversation Management
-- `POST /conversation/` - Create a new conversation
-- `GET /conversation/{conversation_id}` - Retrieve a conversation
-- `POST /message/{conversation_id}` - Add a message to a conversation
+3. Add the environment variables to your shell configuration for persistence:
+
+```bash
+echo 'export OLLAMA_MCP_CONFIG=/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/ollama-config.json' >> ~/.zshrc
+echo 'export CURSOR_MCP_CONFIG=/Users/denizkarayusufoglu/Desktop/cursor-projects/mcp-filesys/cursor-mcp-config.json' >> ~/.zshrc
+```
+
+## Available Resources
+
+The MCP Filesystem Server provides the following resources:
+
+| Resource URI | Description | Capabilities |
+|--------------|-------------|--------------|
+| `list-contents://` | Lists contents of a directory | `read` |
+| `file://` | File access | `read`, `write`, `list` |
 
 ## Example Usage
 
-1. Create a new context:
+### Direct Command Line Usage
+
+You can interact with the MCP server directly using simple command-line pipes:
+
 ```bash
-curl -X POST "http://localhost:8000/context/" -H "Content-Type: application/json" -d '{"user_id": "123", "session_type": "chat"}'
+# List the contents of a directory
+echo '{"jsonrpc":"2.0","id":1,"method":"resources/read","params":{"uri":"list-contents://","parameters":{"path":"/Users"}}}' | node dist/index.js
 ```
 
-2. Create a conversation:
-```bash
-curl -X POST "http://localhost:8000/conversation/" -H "Content-Type: application/json" -d '{"context_id": "ctx_123", "metadata": {"topic": "general"}}'
+### Listing Directory Contents Example
+
+Request:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "resources/read",
+  "params": {
+    "uri": "list-contents://",
+    "parameters": {
+      "path": "/Users/denizkarayusufoglu/Desktop"
+    }
+  }
+}
 ```
 
-3. Add a message:
-```bash
-curl -X POST "http://localhost:8000/message/conv_123" -H "Content-Type: application/json" -d '{"role": "user", "content": "Hello, world!", "timestamp": "2023-10-20T12:00:00Z"}'
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "contents": [
+      {
+        "mimeType": "application/json",
+        "text": "[{\"name\":\".DS_Store\",\"type\":\"file\",\"path\":\"/Users/denizkarayusufoglu/Desktop/.DS_Store\"},{\"name\":\".localized\",\"type\":\"file\",\"path\":\"/Users/denizkarayusufoglu/Desktop/.localized\"},{\"name\":\"cursor-projects\",\"type\":\"directory\",\"path\":\"/Users/denizkarayusufoglu/Desktop/cursor-projects\"}]"
+      }
+    ]
+  }
+}
 ```
 
-## API Documentation
+## Development
 
-Once the server is running, you can access the interactive API documentation at:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc` 
+```bash
+# Clean build files
+npm run clean
+
+# Build the project
+npm run build
+
+# Start the server
+node dist/index.js
+```
+
+## License
+
+[MIT License](LICENSE) 
